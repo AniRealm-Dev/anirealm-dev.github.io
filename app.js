@@ -16,7 +16,8 @@ const titles = {
 window.onload = () => loadData();
 
 function getMyList() { 
-    return JSON.parse(localStorage.getItem('animeHubList')) || []; 
+    // Updated key to aniRealmList to match your new brand
+    return JSON.parse(localStorage.getItem('aniRealmList')) || []; 
 }
 
 function showToast(message) {
@@ -48,7 +49,6 @@ async function loadData(append = false) {
 
     try {
         let url;
-        // Logic to switch to search endpoint when a genre is selected
         if (currentGenre && currentMode !== 'mylist') {
             let baseType = currentMode.includes('manga') ? 'manga' : 'anime';
             url = `${JIKAN_BASE}/${baseType}?genres=${currentGenre}&order_by=score&sort=desc&page=${currentPage}`;
@@ -76,7 +76,6 @@ function displayCards(list) {
     list.forEach((item, index) => {
         const id = item.mal_id;
         const title = item.title_english || item.title;
-        // Use either the API image object or the saved image string
         const img = item.images?.jpg?.large_image_url || item.img;
         const isSaved = myIds.includes(id);
 
@@ -116,13 +115,12 @@ function handleAction(event, item) {
         showToast("Removed from Collection");
     } else {
         if (!list.some(i => i.mal_id === item.mal_id)) {
-            // Store the whole item so we keep descriptions/scores
             list.push(item); 
             btn.classList.add('saved');
             showToast("Added to Collection!");
         }
     }
-    localStorage.setItem('animeHubList', JSON.stringify(list));
+    localStorage.setItem('aniRealmList', JSON.stringify(list));
 }
 
 function setMode(mode, btnId) {
@@ -138,7 +136,6 @@ function setMode(mode, btnId) {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(btnId).classList.add('active');
     
-    // Reset genre tags
     document.querySelectorAll('.genre-tag').forEach(t => t.classList.remove('active'));
     const firstTag = document.querySelector('.genre-tag');
     if (firstTag) firstTag.classList.add('active');
@@ -165,7 +162,8 @@ function openModal(item) {
     const type = (item.type || '').toLowerCase();
     const imgUrl = item.images?.jpg?.large_image_url || item.img;
     
-    let redirectUrl = 'https://anikai.to/home';
+    // Updated Redirect URL below
+    let redirectUrl = 'https://anikototv.to/home'; 
     let btnText = "WATCH NOW";
 
     if (type.includes('novel')) {
@@ -194,7 +192,7 @@ function closeModal() {
 
 function clearFullList() {
     if(confirm("Wipe entire collection?")) {
-        localStorage.setItem('animeHubList', '[]');
+        localStorage.setItem('aniRealmList', '[]');
         document.getElementById('resultsGrid').innerHTML = '';
         showToast("Collection cleared");
     }
