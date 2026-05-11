@@ -14,10 +14,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Cinematic Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <h1 class="splash-logo">
+                <span class="letter">A</span>
+                <span class="letter">n</span>
+                <span class="letter">i</span>
+                <span class="letter shadow">R</span>
+                <span class="letter">e</span>
+                <span class="letter">a</span>
+                <span class="letter">l</span>
+                <span class="letter">m</span>
+            </h1>
+        </div>
+    </div>
+
     <div class="glow-bg"></div>
     <div class="noise-overlay"></div>
     <div id="notificationHost"></div>
 
+    <!-- Details Modal -->
     <div id="infoModal" class="modal" onclick="if(event.target == this) closeModal()">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">&times;</span>
@@ -25,8 +42,8 @@
         </div>
     </div>
 
+    <!-- Navigation Sidebar -->
     <nav class="sidebar">
-        <!-- Logo changed to AR for AniRealm -->
         <div class="logo" onclick="setMode('top/anime', 'topAnime')">A<span>R</span></div>
         <div class="nav-links-vertical">
             <button class="nav-btn active" id="topAnime" onclick="setMode('top/anime', 'topAnime')" title="Anime"><i class="fas fa-tv"></i></button>
@@ -39,6 +56,7 @@
         </div>
     </nav>
 
+    <!-- Main Viewport -->
     <div class="main-content">
         <header class="top-nav">
             <div class="search-wrapper" id="searchWrapper">

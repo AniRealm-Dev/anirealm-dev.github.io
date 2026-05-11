@@ -13,10 +13,18 @@ const titles = {
     'mylist': 'My Collection'
 };
 
-window.onload = () => loadData();
+window.onload = () => {
+    loadData();
+    // Splash Screen Timer
+    const splash = document.getElementById('splash-screen');
+    setTimeout(() => {
+        splash.classList.add('splash-hidden');
+        setTimeout(() => { splash.style.display = 'none'; }, 1000);
+    }, 2800);
+};
 
+// Data Management
 function getMyList() { 
-    // Updated key to aniRealmList to match your new brand
     return JSON.parse(localStorage.getItem('aniRealmList')) || []; 
 }
 
@@ -26,22 +34,20 @@ function showToast(message) {
     toast.className = 'toast';
     toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
     host.appendChild(toast);
-    setTimeout(() => { 
-        toast.style.opacity = '0'; 
-        setTimeout(() => toast.remove(), 400); 
-    }, 2500);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 2500);
 }
 
 function showSkeletons() {
     const grid = document.getElementById('resultsGrid');
     grid.innerHTML = '';
-    for(let i=0; i<10; i++) {
+    for(let i=0; i<12; i++) {
         const skel = document.createElement('div');
         skel.className = 'skeleton';
         grid.appendChild(skel);
     }
 }
 
+// Main Fetcher
 async function loadData(append = false) {
     if (isLoading) return;
     isLoading = true;
@@ -62,11 +68,7 @@ async function loadData(append = false) {
         if (!append) document.getElementById('resultsGrid').innerHTML = '';
         displayCards(data.data);
         currentPage++;
-    } catch (e) { 
-        console.error("Fetch Error:", e); 
-    } finally { 
-        isLoading = false; 
-    }
+    } catch (e) { console.error(e); } finally { isLoading = false; }
 }
 
 function displayCards(list) {
@@ -93,32 +95,28 @@ function displayCards(list) {
             <img src="${img}" loading="lazy">
             <div class="card-overlay">
                 <h4>${title}</h4>
-                <div style="font-size:0.7rem; color:var(--primary); font-weight:800; margin-top:4px;">★ ${item.score || 'N/A'}</div>
+                <div style="font-size:0.75rem; color:var(--primary); font-weight:800; margin-top:4px;">★ ${item.score || 'N/A'}</div>
             </div>
         `;
         
-        card.onclick = (e) => { 
-            if (!e.target.closest('.action-btn')) openModal(item); 
-        };
+        card.onclick = (e) => { if (!e.target.closest('.action-btn')) openModal(item); };
         grid.appendChild(card);
     });
 }
 
+// User Actions
 function handleAction(event, item) {
     event.stopPropagation();
     let list = getMyList();
     const btn = event.currentTarget;
-    
     if (currentMode === 'mylist') {
         list = list.filter(i => i.mal_id !== item.mal_id);
         btn.closest('.card').remove();
         showToast("Removed from Collection");
-    } else {
-        if (!list.some(i => i.mal_id === item.mal_id)) {
-            list.push(item); 
-            btn.classList.add('saved');
-            showToast("Added to Collection!");
-        }
+    } else if (!list.some(i => i.mal_id === item.mal_id)) {
+        list.push(item); 
+        btn.classList.add('saved');
+        showToast("Added to Collection!");
     }
     localStorage.setItem('aniRealmList', JSON.stringify(list));
 }
@@ -128,24 +126,17 @@ function setMode(mode, btnId) {
     currentMode = mode;
     currentPage = 1;
     currentGenre = null;
-    
     document.getElementById('sectionTitle').innerText = titles[mode];
     document.getElementById('clearAllBtn').style.display = (mode === 'mylist') ? 'flex' : 'none';
     document.getElementById('genreContainer').style.display = (mode === 'mylist') ? 'none' : 'flex';
-    
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(btnId).classList.add('active');
-    
     document.querySelectorAll('.genre-tag').forEach(t => t.classList.remove('active'));
-    const firstTag = document.querySelector('.genre-tag');
-    if (firstTag) firstTag.classList.add('active');
-
+    
     if (mode === 'mylist') {
         document.getElementById('resultsGrid').innerHTML = '';
         displayCards(getMyList());
-    } else { 
-        loadData(); 
-    }
+    } else { loadData(); }
 }
 
 function filterByGenre(genreId, btn) {
@@ -156,39 +147,32 @@ function filterByGenre(genreId, btn) {
     loadData();
 }
 
+// Modal Logic
 function openModal(item) {
     const modal = document.getElementById('infoModal');
     const body = document.getElementById('modalBody');
     const type = (item.type || '').toLowerCase();
     const imgUrl = item.images?.jpg?.large_image_url || item.img;
     
-    // Updated Redirect URL below
     let redirectUrl = 'https://anikototv.to/home'; 
     let btnText = "WATCH NOW";
 
-    if (type.includes('novel')) {
-        redirectUrl = 'https://ranobes.top/';
-        btnText = "READ NOVEL";
-    } else if (type.includes('manga') || type.includes('manhwa')) {
-        redirectUrl = 'https://mangafire.to/home';
-        btnText = "READ MANGA";
-    }
+    if (type.includes('novel')) { redirectUrl = 'https://ranobes.top/'; btnText = "READ NOVEL"; }
+    else if (type.includes('manga') || type.includes('manhwa')) { redirectUrl = 'https://mangafire.to/home'; btnText = "READ MANGA"; }
 
     body.innerHTML = `
         <img src="${imgUrl}" class="modal-img">
         <div class="modal-info">
-            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">${item.title_english || item.title}</h2>
-            <div style="color:var(--primary); font-weight:800; margin-bottom:15px;">★ ${item.score || 'N/A'} | ${item.type || 'Media'}</div>
-            <p style="line-height: 1.6; color: #aaa; margin-bottom: 25px; max-height:200px; overflow-y:auto;">${item.synopsis || 'No description found.'}</p>
+            <h2 style="font-size: 1.8rem;">${item.title_english || item.title}</h2>
+            <div style="color:var(--primary); font-weight:800; margin: 10px 0;">★ ${item.score || 'N/A'} | ${item.type || 'Media'}</div>
+            <p style="line-height: 1.6; color: #aaa; margin-bottom: 25px; max-height:250px; overflow-y:auto;">${item.synopsis || 'No description found.'}</p>
             <button onclick="window.open('${redirectUrl}', '_blank')">${btnText}</button>
         </div>
     `;
     modal.style.display = "block";
 }
 
-function closeModal() { 
-    document.getElementById('infoModal').style.display = "none"; 
-}
+function closeModal() { document.getElementById('infoModal').style.display = "none"; }
 
 function clearFullList() {
     if(confirm("Wipe entire collection?")) {
@@ -198,6 +182,7 @@ function clearFullList() {
     }
 }
 
+// Utilities
 async function getRandom() {
     showSkeletons();
     try {
@@ -206,21 +191,17 @@ async function getRandom() {
         const data = await res.json();
         document.getElementById('resultsGrid').innerHTML = '';
         displayCards([data.data]);
-    } catch (e) { 
-        console.error(e); 
-    }
+    } catch (e) { console.error(e); }
 }
 
+// Search Handler
 document.getElementById('searchInput').addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const query = e.target.value.trim();
-    if (!query) { 
-        if(query === "") setMode(currentMode, document.querySelector('.nav-btn.active').id); 
-        return; 
-    }
+    if (!query) { currentPage = 1; loadData(); return; }
     searchTimeout = setTimeout(async () => {
         showSkeletons();
-        let typeSearch = (currentMode.includes('manga') || currentMode.includes('novel')) ? 'manga' : 'anime';
+        let typeSearch = (currentMode.includes('manga')) ? 'manga' : 'anime';
         const res = await fetch(`${JIKAN_BASE}/${typeSearch}?q=${query}`);
         const data = await res.json();
         document.getElementById('resultsGrid').innerHTML = '';
@@ -228,9 +209,10 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     }, 600);
 });
 
+// Infinite Scroll
 window.onscroll = () => {
     if (currentMode === 'mylist') return;
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 800) {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 1000) {
         if (!isLoading) loadData(true);
     }
 };
