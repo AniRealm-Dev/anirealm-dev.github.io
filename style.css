@@ -212,7 +212,7 @@ body {
 @media (max-width: 768px) {
     body { display: block; } 
     
-    .sidebar { width: 100%; height: 65px; bottom: 0; top: auto; left: 0; flex-direction: row; justify-content: center; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(255,255,255,0.05); border-right: none; padding: 0 15px; }
+    .sidebar { width: 100%; height: 65px; bottom: 0; top: auto; left: 0; flex-direction: row; justify-content: space-between; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(255,255,255,0.05); border-right: none; padding: 0 20px; }
     .logo, .nav-divider { display: none !important; } /* Hidden layout elements cleanly */
     .nav-links-vertical { flex-direction: row; width: 100%; justify-content: space-between; gap: 0; }
     .nav-btn { width: 45px; height: 45px; }
@@ -220,21 +220,34 @@ body {
     /* Fixed mobile override for login icon positioning */
     #authNavBtn { margin-top: 0 !important; }
     
-    .main-content { margin-left: 0; width: 100%; padding: 15px 4% 100px 4%; }
+    /* FIX: Added extra bottom padding (140px) so the bottom nav bar never cuts off viewable text */
+    .main-content { margin-left: 0; width: 100%; padding: 15px 4% 140px 4%; }
     .search-wrapper { width: 100%; }
     .hero-header h1 { font-size: 2.2rem; text-align: center; }
     
-    .results-grid { gap: 15px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-    .card img { height: 220px; } 
-    .skeleton { height: 220px; }
+    /* FIX: Prevents cards from getting squeezed too small or distorted on mobile viewports */
+    .results-grid { display: grid !important; gap: 14px !important; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+    .card { width: 100% !important; }
+    .card img { height: 200px !important; object-fit: cover !important; } 
+    .skeleton { height: 200px !important; }
     
     .card-overlay { opacity: 1; transform: translateY(0); padding: 15px 10px; }
     .action-btn:not(.saved) { opacity: 1; background: var(--primary); }
     
-    .modal-content { width: 95%; padding: 40px 20px 20px 20px; margin: 10% auto; max-height: 90vh; }
+    /* FIX: Implements layout parameters to ensure modal detail window content and buttons don't clip */
+    .modal-content { width: 95%; padding: 40px 20px 20px 20px; margin: 10% auto; max-height: 90vh; overflow-y: auto !important; }
     .modal-flex { flex-direction: column; align-items: center; text-align: center; gap: 20px; }
     .modal-img { width: 180px; }
     .close-modal { top: 15px; right: 20px; font-size: 30px; }
+    
+    /* Ensures the action container button fits neatly under descriptive text */
+    .modal-info button, #authSubmitBtn {
+        width: 90% !important;
+        padding: 12px 24px !important;
+        font-size: 16px !important;
+        margin: 20px auto 10px auto !important;
+        display: block;
+    }
 }
 
 /* Prevent scrolling entirely while this class is active */
