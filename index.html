@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AniRealm | Ultimate Experience</title>
     
-    <!-- Open Graph Metadata -->
     <meta property="og:title" content="AniRealm">
     <meta name="description" content="Explore the ultimate anime and manga experience at AniRealm.">
     
-    <!-- Stylesheets -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,7 +17,6 @@
 </head>
 <body>
 
-    <!-- Splash Screen -->
     <div id="splash-screen" role="presentation" aria-hidden="true">
         <div class="splash-content">
             <h1 class="splash-logo">
@@ -33,16 +29,34 @@
                 <span class="letter">l</span>
                 <span class="letter">m</span>
             </h1>
-        
         </div>
     </div>
 
-    <!-- Background Effects -->
     <div class="glow-bg" aria-hidden="true"></div>
     <div class="noise-overlay" aria-hidden="true"></div>
     <div id="notificationHost" aria-live="polite"></div>
 
-    <!-- Modal Dialog -->
+    <div id="authModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeAuthModal()" onkeydown="if(event.key === 'Enter') closeAuthModal()" role="button" aria-label="Close authentication modal" tabindex="0">&times;</span>
+            <div class="auth-container">
+                <h2 id="authTitle" style="margin-bottom: 20px; font-size: 1.8rem;">Sign In</h2>
+                <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                    <div style="margin-bottom: 15px;">
+                        <input type="email" id="authEmail" placeholder="Email Address" required style="width:100%; padding:12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; font-family:inherit;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <input type="password" id="authPassword" placeholder="Password" required style="width:100%; padding:12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; font-family:inherit;">
+                    </div>
+                    <button type="submit" id="authSubmitBtn" style="width: 100%; padding: 12px; font-weight: 600; margin-bottom: 15px;">Sign In</button>
+                </form>
+                <p id="authSwitchText" style="font-size: 0.9rem; color: #aaa; text-align: center;">
+                    Don't have an account? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target == this) closeModal()">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()" onkeydown="if(event.key === 'Enter') closeModal()" role="button" aria-label="Close modal" tabindex="0">&times;</span>
@@ -50,7 +64,6 @@
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
     <nav class="sidebar" aria-label="Main Navigation">
         <div class="logo" onclick="setMode('top/anime', 'topAnime')" onkeydown="if(event.key === 'Enter') setMode('top/anime', 'topAnime')" role="button" tabindex="0" aria-label="AniRealm Home">A<span>R</span></div>
         
@@ -65,13 +78,10 @@
             
             <button class="nav-btn dice-btn" onclick="getRandom()" title="Surprise Me" aria-label="Get Random Recommendation"><i class="fas fa-dice" aria-hidden="true"></i></button>
             
-            <a href="https://brave.com/" target="_blank" rel="noopener noreferrer" class="nav-btn brave-sidebar-btn" title="Block Ads with Brave" aria-label="Download Brave Browser">
-                <i class="fab fa-brave" aria-hidden="true"></i>
-            </a>
+            <button class="nav-btn" id="authNavBtn" onclick="openAuthModal()" title="Login" style="color: var(--primary);"><i class="fas fa-user-circle"></i></button>
         </div>
     </nav>
 
-    <!-- Main Dynamic Content Container -->
     <div class="main-content">
         <header class="top-nav">
             <form class="search-wrapper" id="searchWrapper" onsubmit="return false;">
@@ -83,7 +93,6 @@
             </button>
         </header>
 
-        <!-- Fixed Semantics: Grouped main views inside semantic <main> tag -->
         <main>
             <section class="hero-header">
                 <h1 id="sectionTitle">Global Top Rated</h1>
@@ -101,12 +110,15 @@
                 </nav>
             </section>
 
-            <!-- Results Grid Container -->
             <section class="results-grid" id="resultsGrid"></section>
         </main>
     </div>
 
-    <!-- Core App Script -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
     <script src="app.js"></script>
 </body>
 </html>
