@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AniRealm | Ultimate Experience</title>
     
+    <!-- Open Graph Metadata -->
     <meta property="og:title" content="AniRealm">
     <meta name="description" content="Explore the ultimate anime and manga experience at AniRealm.">
     
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="style.css">
     
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <!-- Splash Screen -->
     <div id="splash-screen" role="presentation" aria-hidden="true">
         <div class="splash-content">
             <h1 class="splash-logo">
@@ -29,22 +33,27 @@
                 <span class="letter">l</span>
                 <span class="letter">m</span>
             </h1>
+        
         </div>
     </div>
 
-    <div class="glow-bg"></div>
-    <div class="noise-overlay"></div>
+    <!-- Background Effects -->
+    <div class="glow-bg" aria-hidden="true"></div>
+    <div class="noise-overlay" aria-hidden="true"></div>
     <div id="notificationHost" aria-live="polite"></div>
 
-    <div id="infoModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target == this) closeModal()">
+    <!-- Modal Dialog -->
+    <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target == this) closeModal()">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()" role="button" aria-label="Close modal">&times;</span>
+            <span class="close-modal" onclick="closeModal()" onkeydown="if(event.key === 'Enter') closeModal()" role="button" aria-label="Close modal" tabindex="0">&times;</span>
             <div id="modalBody" class="modal-flex"></div>
         </div>
     </div>
 
+    <!-- Sidebar Navigation -->
     <nav class="sidebar" aria-label="Main Navigation">
-        <div class="logo" onclick="setMode('top/anime', 'topAnime')" role="button" tabindex="0">A<span>R</span></div>
+        <div class="logo" onclick="setMode('top/anime', 'topAnime')" onkeydown="if(event.key === 'Enter') setMode('top/anime', 'topAnime')" role="button" tabindex="0" aria-label="AniRealm Home">A<span>R</span></div>
+        
         <div class="nav-links-vertical">
             <button class="nav-btn active" id="topAnime" onclick="setMode('top/anime', 'topAnime')" title="Anime" aria-label="View Top Anime"><i class="fas fa-tv" aria-hidden="true"></i></button>
             <button class="nav-btn" id="topManga" onclick="setMode('top/manga', 'topManga')" title="Manga" aria-label="View Top Manga"><i class="fas fa-book-open" aria-hidden="true"></i></button>
@@ -56,12 +65,13 @@
             
             <button class="nav-btn dice-btn" onclick="getRandom()" title="Surprise Me" aria-label="Get Random Recommendation"><i class="fas fa-dice" aria-hidden="true"></i></button>
             
-            <a href="https://brave.com/" target="_blank" class="nav-btn brave-sidebar-btn" title="Block Ads with Brave">
-                <i class="fab fa-brave"></i>
+            <a href="https://brave.com/" target="_blank" rel="noopener noreferrer" class="nav-btn brave-sidebar-btn" title="Block Ads with Brave" aria-label="Download Brave Browser">
+                <i class="fab fa-brave" aria-hidden="true"></i>
             </a>
         </div>
     </nav>
 
+    <!-- Main Dynamic Content Container -->
     <div class="main-content">
         <header class="top-nav">
             <form class="search-wrapper" id="searchWrapper" onsubmit="return false;">
@@ -73,25 +83,30 @@
             </button>
         </header>
 
-        <section class="hero-header">
-            <h1 id="sectionTitle">Global Top Rated</h1>
-            <div class="accent-line"></div>
-            
-            <nav class="genre-container" id="genreContainer" aria-label="Genre Filters">
-                <button class="genre-tag active" onclick="filterByGenre(null, this)">All</button>
-                <button class="genre-tag" onclick="filterByGenre(1, this)">Action</button>
-                <button class="genre-tag" onclick="filterByGenre(2, this)">Adventure</button>
-                <button class="genre-tag" onclick="filterByGenre(4, this)">Comedy</button>
-                <button class="genre-tag" onclick="filterByGenre(8, this)">Drama</button>
-                <button class="genre-tag" onclick="filterByGenre(10, this)">Fantasy</button>
-                <button class="genre-tag" onclick="filterByGenre(22, this)">Romance</button>
-                <button class="genre-tag" onclick="filterByGenre(24, this)">Sci-Fi</button>
-            </nav>
-        </section>
+        <!-- Fixed Semantics: Grouped main views inside semantic <main> tag -->
+        <main>
+            <section class="hero-header">
+                <h1 id="sectionTitle">Global Top Rated</h1>
+                <div class="accent-line"></div>
+                
+                <nav class="genre-container" id="genreContainer" aria-label="Genre Filters">
+                    <button class="genre-tag active" onclick="filterByGenre(null, this)">All</button>
+                    <button class="genre-tag" onclick="filterByGenre(1, this)">Action</button>
+                    <button class="genre-tag" onclick="filterByGenre(2, this)">Adventure</button>
+                    <button class="genre-tag" onclick="filterByGenre(4, this)">Comedy</button>
+                    <button class="genre-tag" onclick="filterByGenre(8, this)">Drama</button>
+                    <button class="genre-tag" onclick="filterByGenre(10, this)">Fantasy</button>
+                    <button class="genre-tag" onclick="filterByGenre(22, this)">Romance</button>
+                    <button class="genre-tag" onclick="filterByGenre(24, this)">Sci-Fi</button>
+                </nav>
+            </section>
 
-        <main class="results-grid" id="resultsGrid"></main>
+            <!-- Results Grid Container -->
+            <section class="results-grid" id="resultsGrid"></section>
+        </main>
     </div>
 
+    <!-- Core App Script -->
     <script src="app.js"></script>
 </body>
 </html>
