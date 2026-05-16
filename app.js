@@ -10,7 +10,7 @@ let currentFetchedItems = [];
 
 // Initialize Firebase Production Instance (Namespaced Structure)
 const firebaseConfig = {
-    apiKey: "AIzaSyBLxWcX7Ks70HiOUVerl112q87JclfjEmo",
+    apiKey: "AIzaSyBLXwCX7Ks70HiOUVerl112q87JclfjEmo", // Checked case-sensitivity
     authDomain: "anirealm-402d6.firebaseapp.com",
     projectId: "anirealm-402d6",
     storageBucket: "anirealm-402d6.firebasestorage.app",
@@ -19,11 +19,20 @@ const firebaseConfig = {
     measurementId: "G-HHV5J980R1"
 };
 
-// Initialize Firebase Production Instances
-firebase.initializeApp(firebaseConfig);
+// Safe initialization check to prevent Live Server crash loops
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
 const auth = firebase.auth();
 const db = firebase.firestore();
-firebase.analytics();
+
+// Wrapped in a try/catch so if analytics fails, the whole site doesn't freeze
+try {
+    firebase.analytics();
+} catch (analyticsError) {
+    console.warn("Analytics initialization skipped:", analyticsError.message);
+}
 
 let currentUser = null;
 let cachedCloudList = []; 
