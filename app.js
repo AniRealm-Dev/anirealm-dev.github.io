@@ -8,9 +8,9 @@ let currentGenre = null;
 let searchQuery = '';
 let currentFetchedItems = []; 
 
-// Firebase Production Configurations
+// Initialize Firebase Production Instance (Namespaced Structure)
 const firebaseConfig = {
-    apiKey: "AIzaSyBLxWcX7Ks70HiOUVerl112q87JcljFEmo", // Note: Secure this endpoint inside Google Cloud Console via HTTP restrictions
+    apiKey: "AIzaSyBLxWcX7Ks70HiOUVerl112q87JclfjEmo",
     authDomain: "anirealm-402d6.firebaseapp.com",
     projectId: "anirealm-402d6",
     storageBucket: "anirealm-402d6.firebasestorage.app",
