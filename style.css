@@ -165,10 +165,68 @@ body {
 .modal-flex { display: flex; gap: 40px; align-items: flex-start; }
 .modal-img { width: 280px; border-radius: 20px; }
 .modal-info button { background: var(--primary); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px; }
-.close-modal { position: absolute; top: 25px; right: 30px; font-size: 34px; cursor: pointer; color: #fff; }
+.close-modal { position: absolute; top: 25px; right: 30px; font-size: 34px; cursor: pointer; color: #fff; z-index: 10; }
+
+/* --- Custom Scrollbar for Modal Synopsis --- */
+.modal-info p::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-info p::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+.modal-info p::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* --- Brave Recommendation Alert --- */
+.brave-alert {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid #ff4500; /* Brave Orange */
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #ccc;
+}
+.brave-icon {
+    font-size: 1.3rem;
+    color: #ff4500;
+}
+.brave-link {
+    color: #fff;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.brave-link:hover {
+    color: var(--primary);
+}
+.brave-sidebar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.brave-sidebar-btn i {
+    color: #ff4500 !important;
+    font-size: 1.4rem;
+}
+.brave-sidebar-btn:hover {
+    background: #ff4500 !important;
+    box-shadow: 0 10px 20px rgba(255, 69, 0, 0.4) !important;
+}
+.brave-sidebar-btn:hover i {
+    color: #fff !important;
+}
 
 /* --- Animations --- */
-@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
@@ -192,7 +250,9 @@ body {
     .results-grid { gap: 15px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
     .card-overlay { opacity: 1; transform: translateY(0); }
     .action-btn:not(.saved) { opacity: 1; background: var(--primary); }
-    .modal-content { width: 95%; padding: 20px; margin: 10% auto; overflow-y: auto; max-height: 90vh; }
+    
+    .modal-content { width: 95%; padding: 50px 20px 20px 20px; margin: 10% auto; overflow-y: auto; max-height: 90vh; }
     .modal-flex { flex-direction: column; align-items: center; text-align: center; }
     .modal-img { width: 180px; }
+    .close-modal { top: 10px; right: 20px; font-size: 30px; }
 }

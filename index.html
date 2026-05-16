@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AniRealm | Ultimate Experience</title>
     
-    <!-- SEO and Social Media Metadata -->
     <meta property="og:title" content="AniRealm">
     <meta name="description" content="Explore the ultimate anime and manga experience at AniRealm.">
     
     <link rel="stylesheet" href="style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Cinematic Splash Screen -->
-    <div id="splash-screen">
+    <div id="splash-screen" role="presentation" aria-hidden="true">
         <div class="splash-content">
             <h1 class="splash-logo">
                 <span class="letter">A</span>
@@ -32,39 +34,42 @@
 
     <div class="glow-bg"></div>
     <div class="noise-overlay"></div>
-    <div id="notificationHost"></div>
+    <div id="notificationHost" aria-live="polite"></div>
 
-    <!-- Details Modal -->
-    <div id="infoModal" class="modal" onclick="if(event.target == this) closeModal()">
+    <div id="infoModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target == this) closeModal()">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <span class="close-modal" onclick="closeModal()" role="button" aria-label="Close modal">&times;</span>
             <div id="modalBody" class="modal-flex"></div>
         </div>
     </div>
 
-    <!-- Navigation Sidebar -->
-    <nav class="sidebar">
-        <div class="logo" onclick="setMode('top/anime', 'topAnime')">A<span>R</span></div>
+    <nav class="sidebar" aria-label="Main Navigation">
+        <div class="logo" onclick="setMode('top/anime', 'topAnime')" role="button" tabindex="0">A<span>R</span></div>
         <div class="nav-links-vertical">
-            <button class="nav-btn active" id="topAnime" onclick="setMode('top/anime', 'topAnime')" title="Anime"><i class="fas fa-tv"></i></button>
-            <button class="nav-btn" id="topManga" onclick="setMode('top/manga', 'topManga')" title="Manga"><i class="fas fa-book-open"></i></button>
-            <button class="nav-btn" id="topNovels" onclick="setMode('top/manga?type=novel', 'topNovels')" title="Novels"><i class="fas fa-scroll"></i></button>
-            <button class="nav-btn" id="trending" onclick="setMode('seasons/now', 'trending')" title="Trending"><i class="fas fa-fire"></i></button>
-            <button class="nav-btn" id="myList" onclick="setMode('mylist', 'myList')" title="Collection"><i class="fas fa-bookmark"></i></button>
+            <button class="nav-btn active" id="topAnime" onclick="setMode('top/anime', 'topAnime')" title="Anime" aria-label="View Top Anime"><i class="fas fa-tv" aria-hidden="true"></i></button>
+            <button class="nav-btn" id="topManga" onclick="setMode('top/manga', 'topManga')" title="Manga" aria-label="View Top Manga"><i class="fas fa-book-open" aria-hidden="true"></i></button>
+            <button class="nav-btn" id="topNovels" onclick="setMode('top/manga?type=novel', 'topNovels')" title="Novels" aria-label="View Light Novels"><i class="fas fa-scroll" aria-hidden="true"></i></button>
+            <button class="nav-btn" id="trending" onclick="setMode('seasons/now', 'trending')" title="Trending" aria-label="View Trending"><i class="fas fa-fire" aria-hidden="true"></i></button>
+            <button class="nav-btn" id="myList" onclick="setMode('mylist', 'myList')" title="Collection" aria-label="View My Collection"><i class="fas fa-bookmark" aria-hidden="true"></i></button>
+            
             <div class="nav-divider"></div>
-            <button class="nav-btn dice-btn" onclick="getRandom()" title="Surprise Me"><i class="fas fa-dice"></i></button>
+            
+            <button class="nav-btn dice-btn" onclick="getRandom()" title="Surprise Me" aria-label="Get Random Recommendation"><i class="fas fa-dice" aria-hidden="true"></i></button>
+            
+            <a href="https://brave.com/" target="_blank" class="nav-btn brave-sidebar-btn" title="Block Ads with Brave">
+                <i class="fab fa-brave"></i>
+            </a>
         </div>
     </nav>
 
-    <!-- Main Viewport -->
     <div class="main-content">
         <header class="top-nav">
-            <div class="search-wrapper" id="searchWrapper">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search across titles..." autocomplete="off">
-            </div>
+            <form class="search-wrapper" id="searchWrapper" onsubmit="return false;">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="searchInput" placeholder="Search across titles..." autocomplete="off" aria-label="Search titles">
+            </form>
             <button id="clearAllBtn" class="clear-btn" onclick="clearFullList()" style="display: none;">
-                <i class="fas fa-trash-alt"></i> Clear Collection
+                <i class="fas fa-trash-alt" aria-hidden="true"></i> Clear Collection
             </button>
         </header>
 
@@ -72,7 +77,7 @@
             <h1 id="sectionTitle">Global Top Rated</h1>
             <div class="accent-line"></div>
             
-            <div class="genre-container" id="genreContainer">
+            <nav class="genre-container" id="genreContainer" aria-label="Genre Filters">
                 <button class="genre-tag active" onclick="filterByGenre(null, this)">All</button>
                 <button class="genre-tag" onclick="filterByGenre(1, this)">Action</button>
                 <button class="genre-tag" onclick="filterByGenre(2, this)">Adventure</button>
@@ -81,7 +86,7 @@
                 <button class="genre-tag" onclick="filterByGenre(10, this)">Fantasy</button>
                 <button class="genre-tag" onclick="filterByGenre(22, this)">Romance</button>
                 <button class="genre-tag" onclick="filterByGenre(24, this)">Sci-Fi</button>
-            </div>
+            </nav>
         </section>
 
         <main class="results-grid" id="resultsGrid"></main>
