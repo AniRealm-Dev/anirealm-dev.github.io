@@ -37,29 +37,40 @@
     <div id="notificationHost" aria-live="polite"></div>
 
     <div id="authModal" class="modal" role="dialog" aria-modal="true" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content auth-modal-box">
             <span class="close-modal" onclick="closeAuthModal()" onkeydown="if(event.key === 'Enter') closeAuthModal()" role="button" aria-label="Close authentication modal" tabindex="0">&times;</span>
             <div class="auth-container">
-                <h2 id="authTitle" style="margin-bottom: 20px; font-size: 1.8rem;">Sign In</h2>
+                <h2 id="authTitle">Sign In</h2>
                 <form id="authForm" onsubmit="handleAuthSubmit(event)">
-                    <div style="margin-bottom: 15px;">
-                        <input type="email" id="authEmail" placeholder="Email Address" required style="width:100%; padding:12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; font-family:inherit;">
+                    
+                    <div id="usernameFieldWrapper" class="input-group" style="display: none;">
+                        <input type="text" id="authUsername" placeholder="Username">
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <input type="password" id="authPassword" placeholder="Password" required style="width:100%; padding:12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:6px; font-family:inherit;">
+
+                    <div class="input-group">
+                        <input type="text" id="authEmail" placeholder="Email or Username" required>
                     </div>
-                    <button type="submit" id="authSubmitBtn" style="width: 100%; padding: 12px; font-weight: 600; margin-bottom: 15px;">Sign In</button>
+
+                    <div class="input-group">
+                        <input type="password" id="authPassword" placeholder="Password" required>
+                    </div>
+
+                    <div id="forgotPasswordWrapper">
+                        <a href="#" id="forgotPasswordLink" onclick="handleForgotPassword(event)">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" id="authSubmitBtn">Sign In</button>
                 </form>
-                <p id="authSwitchText" style="font-size: 0.9rem; color: #aaa; text-align: center;">
-                    Don't have an account? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Register here</a>
+                <p id="authSwitchText">
+                    Don't have an account? <a href="#" onclick="toggleAuthMode(event)">Register here</a>
                 </p>
             </div>
         </div>
     </div>
 
     <div id="infoModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target == this) closeModal()">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()" onkeydown="if(event.key === 'Enter') closeModal()" role="button" aria-label="Close modal" tabindex="0">&times;</span>
+        <div class="modal-content" id="modalContainerWindow" style="max-width: 680px; padding: 0; overflow: hidden; border-radius: 16px;">
+            <span class="close-modal" onclick="closeModal()" onkeydown="if(event.key === 'Enter') closeModal()" role="button" aria-label="Close modal" tabindex="0" style="position: absolute; right: 20px; top: 15px; z-index: 10; color: #fff; background: rgba(0,0,0,0.5); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem;">&times;</span>
             <div id="modalBody" class="modal-flex"></div>
         </div>
     </div>

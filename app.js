@@ -10,7 +10,7 @@ let currentFetchedItems = [];
 
 // Initialize Firebase Production Instance (Namespaced Structure)
 const firebaseConfig = {
-    apiKey: "AIzaSyBLXwCX7Ks70HiOUVerl112q87JclfjEmo", // Checked case-sensitivity
+    apiKey: "AIzaSyBLXwCX7Ks70HiOUVerl112q87JclfjEmo", 
     authDomain: "anirealm-402d6.firebaseapp.com",
     projectId: "anirealm-402d6",
     storageBucket: "anirealm-402d6.firebasestorage.app",
@@ -19,7 +19,6 @@ const firebaseConfig = {
     measurementId: "G-HHV5J980R1"
 };
 
-// Safe initialization check to prevent Live Server crash loops
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -27,7 +26,6 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Wrapped in a try/catch so if analytics fails, the whole site doesn't freeze
 try {
     firebase.analytics();
 } catch (analyticsError) {
@@ -37,6 +35,9 @@ try {
 let currentUser = null;
 let cachedCloudList = []; 
 let isLoginMode = true; 
+
+let deleteTimeout = null;
+let pendingDeletedItem = null;
 
 const titles = {
     'top/anime': 'Global Rated Anime',
@@ -54,16 +55,16 @@ window.onload = () => {
         const authNavBtn = document.getElementById('authNavBtn');
         if (user) {
             currentUser = user;
-            if (authNavBtn) authNavBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
-            authNavBtn.title = "Logout";
-            authNavBtn.onclick = handleLogout;
+            if (authNavBtn) authNavBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
+            authNavBtn.title = "View Profile";
+            authNavBtn.onclick = openProfileDashboard; 
             syncUserCollection();
         } else {
             currentUser = null;
             cachedCloudList = [];
             if (authNavBtn) authNavBtn.innerHTML = '<i class="fas fa-user-circle"></i>';
             authNavBtn.title = "Login";
-            authNavBtn.onclick = openAuthModal;
+            authNavBtn.onclick = openAuthModal; 
             if (currentMode === 'mylist') setMode('top/anime', 'topAnime');
         }
     });
@@ -93,7 +94,7 @@ async function saveMyList(newList) {
     if (currentUser) {
         cachedCloudList = newList;
         try {
-            await db.collection('users').doc(currentUser.uid).set({ collection: newList });
+            await db.collection('users').doc(currentUser.uid).update({ collection: newList });
         } catch (err) {
             console.error("Firestore sync error:", err);
         }
@@ -110,10 +111,11 @@ async function syncUserCollection() {
             cachedCloudList = doc.data().collection || [];
         } else {
             const localList = JSON.parse(localStorage.getItem('aniRealmList')) || [];
-            if (localList.length > 0) {
-                cachedCloudList = localList;
-                await db.collection('users').doc(currentUser.uid).set({ collection: localList });
-            }
+            cachedCloudList = localList;
+            await db.collection('users').doc(currentUser.uid).set({ 
+                username: currentUser.email.split('@')[0],
+                collection: localList 
+            }, { merge: true });
         }
         if (currentMode === 'mylist') displayCards(cachedCloudList);
     } catch (err) {
@@ -122,6 +124,8 @@ async function syncUserCollection() {
 }
 
 function openAuthModal() {
+    isLoginMode = false; 
+    toggleAuthMode({ preventDefault: () => {} });
     document.getElementById('authModal').style.display = "block";
 }
 
@@ -132,24 +136,74 @@ function closeAuthModal() {
 function toggleAuthMode(e) {
     e.preventDefault();
     isLoginMode = !isLoginMode;
-    document.getElementById('authTitle').innerText = isLoginMode ? "Sign In" : "Register";
-    document.getElementById('authSubmitBtn').innerText = isLoginMode ? "Sign In" : "Register";
-    document.getElementById('authSwitchText').innerHTML = isLoginMode 
+    
+    const title = document.getElementById('authTitle');
+    const submitBtn = document.getElementById('authSubmitBtn');
+    const switchText = document.getElementById('authSwitchText');
+    const usernameWrapper = document.getElementById('usernameFieldWrapper');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const emailInput = document.getElementById('authEmail');
+
+    title.innerText = isLoginMode ? "Sign In" : "Register";
+    submitBtn.innerText = isLoginMode ? "Sign In" : "Register";
+    
+    if (isLoginMode) {
+        usernameWrapper.style.display = "none";
+        if (forgotPasswordLink) forgotPasswordLink.style.display = "block";
+        if (emailInput) emailInput.placeholder = "Email or Username";
+    } else {
+        usernameWrapper.style.display = "block";
+        if (forgotPasswordLink) forgotPasswordLink.style.display = "none";
+        if (emailInput) emailInput.placeholder = "Email Address";
+    }
+
+    switchText.innerHTML = isLoginMode 
         ? `Don't have an account? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Register here</a>`
         : `Already have an account? <a href="#" onclick="toggleAuthMode(event)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign in here</a>`;
 }
 
 async function handleAuthSubmit(e) {
     e.preventDefault();
-    const email = document.getElementById('authEmail').value.trim();
+    let loginInput = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
     
     try {
         if (isLoginMode) {
+            let email = loginInput;
+            
+            if (!loginInput.includes('@')) {
+                const usernameSnapshot = await db.collection('usernames').doc(loginInput.toLowerCase()).get();
+                if (!usernameSnapshot.exists) {
+                    throw new Error("Username profile not found. Please type your full email address or register.");
+                }
+                email = usernameSnapshot.data().email;
+            }
+
             await auth.signInWithEmailAndPassword(email, password);
             showToast("Logged in successfully!");
         } else {
-            await auth.createUserWithEmailAndPassword(email, password);
+            const username = document.getElementById('authUsername').value.trim();
+            
+            if (!username || username.includes('@')) {
+                throw new Error("Please type a valid system username profile containing no '@' characters.");
+            }
+
+            const usernameRef = db.collection('usernames').doc(username.toLowerCase());
+            const usernameDoc = await usernameRef.get();
+            if (usernameDoc.exists) {
+                throw new Error("This username identity has already been taken by another user!");
+            }
+
+            const userCredential = await auth.createUserWithEmailAndPassword(loginInput, password);
+            const user = userCredential.user;
+
+            await usernameRef.set({ email: loginInput.toLowerCase(), uid: user.uid });
+
+            await db.collection('users').doc(user.uid).set({
+                username: username,
+                collection: []
+            });
+
             showToast("Account registered!");
         }
         closeAuthModal();
@@ -158,9 +212,119 @@ async function handleAuthSubmit(e) {
     }
 }
 
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const loginInput = document.getElementById('authEmail').value.trim();
+    if (!loginInput || !loginInput.includes('@')) {
+        alert("Please enter your complete registered email address in the field above to dispatch a reset link.");
+        return;
+    }
+    try {
+        await auth.sendPasswordResetEmail(loginInput);
+        alert("A password reset email loop has been dispatched successfully! Check your inbox.");
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+async function openProfileDashboard() {
+    if (!currentUser) return;
+    
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.data() || {};
+        
+        const username = userData.username || currentUser.email.split('@')[0];
+        const collection = userData.collection || [];
+        const collectionCount = collection.length;
+
+        const animeCount = collection.filter(i => !(i.type || '').toLowerCase().includes('manga') && !(i.type || '').toLowerCase().includes('novel')).length;
+        const mangaCount = collectionCount - animeCount;
+
+        const modal = document.getElementById('infoModal');
+        const body = document.getElementById('modalBody');
+        const container = document.getElementById('modalContainerWindow');
+        
+        if (!modal || !body) return;
+
+        body.className = ""; 
+        body.style.display = "block";
+
+        if (container) {
+            container.style.maxWidth = "720px";
+            container.style.background = "#0b0b0c";
+        }
+
+        body.innerHTML = `
+            <div class="profile-dashboard-wrapper">
+                <div style="height: 140px; background: linear-gradient(135deg, var(--primary) 0%, #1e1135 100%); position: relative;">
+                    <div style="position: absolute; bottom: -25px; left: 30px; display: flex; align-items: flex-end; gap: 20px;">
+                        <div style="margin-bottom: 10px;">
+                            <h2 style="font-size: 1.6rem; font-weight: 800; margin: 0; line-height: 1.2;">${username}</h2>
+                            <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin: 2px 0 0 0;"><i class="fas fa-envelope" style="font-size:0.75rem;"></i> ${currentUser.email}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-grid-container">
+                    <div>
+                        <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 20px 0 15px 0; font-weight: 800;">Collection Overview</h3>
+                        <div class="profile-stats-grid">
+                            <div style="background: #121214; padding: 15px; border-radius: 12px; border: 1px solid #1c1c1f; text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">${collectionCount}</div>
+                                <div style="font-size: 0.75rem; color: #777; font-weight: 600; margin-top: 4px;">Total Items</div>
+                            </div>
+                            <div style="background: #121214; padding: 15px; border-radius: 12px; border: 1px solid #1c1c1f; text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: #2ecc71;">${animeCount}</div>
+                                <div style="font-size: 0.75rem; color: #777; font-weight: 600; margin-top: 4px;">Anime Entries</div>
+                            </div>
+                            <div style="background: #121214; padding: 15px; border-radius: 12px; border: 1px solid #1c1c1f; text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 800; color: #3498db;">${mangaCount}</div>
+                                <div style="font-size: 0.75rem; color: #777; font-weight: 600; margin-top: 4px;">Manga/Books</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #121214; border-radius: 12px; border: 1px solid #1c1c1f; padding: 20px; margin-top: 20px;">
+                            <h4 style="margin: 0 0 10px 0; font-size: 0.95rem; font-weight: bold; color: #aaa;">System Statistics</h4>
+                            <div style="font-size: 0.85rem; color: #666; display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1c1c1f;">
+                                <span>Account Status</span>
+                                <span style="color: #2ecc71; font-weight: 600;">Verified Active</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #666; display: flex; justify-content: space-between; padding: 8px 0;">
+                                <span>Database Environment</span>
+                                <span style="color: var(--primary); font-weight: 600;">Cloud Production</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; justify-content: space-between; min-height: 180px; margin-top: 20px;">
+                        <div>
+                            <h3 style="font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 0 0 15px 0; font-weight: 800;">Account Settings</h3>
+                            <p style="font-size: 0.85rem; color: #555; margin: 0 0 20px 0; line-height: 1.5;">Manage session properties, data sync states, or logout of your device tracking nodes safely.</p>
+                        </div>
+                        
+                        <button onclick="handleLogout()" style="background: #e74c3c; color: white; border: none; padding: 14px; width: 100%; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        modal.style.display = "block";
+    } catch (err) {
+        console.error("Failed to compile dashboard view:", err);
+    }
+}
+
 function handleLogout() {
     if (confirm("Log out of your account?")) {
+        if (deleteTimeout) {
+            clearTimeout(deleteTimeout);
+            deleteTimeout = null;
+            pendingDeletedItem = null;
+        }
         auth.signOut();
+        closeModal();
         showToast("Logged out smoothly");
     }
 }
@@ -176,6 +340,53 @@ function showToast(message) {
         toast.style.opacity = '0'; 
         setTimeout(() => toast.remove(), 400); 
     }, 2500);
+}
+
+function showUndoToast(message) {
+    const host = document.getElementById('notificationHost');
+    if (!host) return;
+    
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = '#1f1f1f';
+    toast.style.border = '1px solid #333';
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
+    toast.style.justifyContent = 'space-between';
+    toast.style.minWidth = '280px';
+    
+    toast.innerHTML = `
+        <span><i class="fas fa-trash-alt" style="color: #e74c3c; margin-right: 8px;"></i> ${message}</span>
+        <button onclick="triggerUndoAction()" style="background: var(--primary); color: #fff; border: none; padding: 6px 12px; margin-left: 15px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 0.75rem; font-family: inherit;">UNDO</button>
+    `;
+    host.appendChild(toast);
+    
+    setTimeout(() => { 
+        toast.style.opacity = '0'; 
+        setTimeout(() => toast.remove(), 400); 
+    }, 4000);
+}
+
+function triggerUndoAction() {
+    if (!pendingDeletedItem) return;
+    
+    clearTimeout(deleteTimeout);
+    deleteTimeout = null;
+
+    let list = getMyList();
+    list.push(pendingDeletedItem);
+    cachedCloudList = list;
+    pendingDeletedItem = null;
+
+    displayCards(list);
+    if (!currentUser) {
+        localStorage.setItem('aniRealmList', JSON.stringify(list));
+    }
+    
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+    showToast("Restored successfully!");
 }
 
 function showSkeletons() {
@@ -294,29 +505,50 @@ function handleAction(event, cacheIndex, fallbackId) {
     let list = getMyList();
     const btn = event.currentTarget;
     
-    // Fixed: Ensure lookup accuracy during active lists deletions
-    let item = currentMode === 'mylist' 
-        ? list.find(i => i.mal_id === fallbackId) 
-        : currentFetchedItems[cacheIndex];
-
-    if (!item) return;
-
     if (currentMode === 'mylist') {
+        if (deleteTimeout) {
+            clearTimeout(deleteTimeout);
+            deleteTimeout = null;
+        }
+
+        pendingDeletedItem = list.find(i => i.mal_id === fallbackId);
+        if (!pendingDeletedItem) return;
+
         list = list.filter(i => i.mal_id !== fallbackId);
+        cachedCloudList = list;
+        
         const cardNode = btn.closest('.card');
         if (cardNode) cardNode.remove();
-        showToast("Removed from Collection");
-        saveMyList(list);
-        
-        // If the collection is now completely empty, trigger empty message state display
-        if (list.length === 0) {
-            displayCards([]);
+        if (list.length === 0) displayCards([]);
+
+        showUndoToast("Removed from Collection");
+
+        deleteTimeout = setTimeout(async () => {
+            if (pendingDeletedItem) {
+                if (currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.uid).set({ collection: list }, { merge: true });
+                    } catch (err) {
+                        console.error("Firestore delayed removal error:", err);
+                    }
+                } else {
+                    localStorage.setItem('aniRealmList', JSON.stringify(list));
+                }
+                pendingDeletedItem = null;
+                deleteTimeout = null;
+            }
+        }, 4000);
+
+    } else {
+        const item = currentFetchedItems[cacheIndex];
+        if (!item) return;
+
+        if (!list.some(i => i.mal_id === item.mal_id)) {
+            list.push(item); 
+            btn.classList.add('saved');
+            showToast("Added to Collection!");
+            saveMyList(list);
         }
-    } else if (!list.some(i => i.mal_id === item.mal_id)) {
-        list.push(item); 
-        btn.classList.add('saved');
-        showToast("Added to Collection!");
-        saveMyList(list);
     }
 }
 
@@ -363,7 +595,17 @@ function filterByGenre(genreId, btn) {
 function openModal(item) {
     const modal = document.getElementById('infoModal');
     const body = document.getElementById('modalBody');
+    const container = document.getElementById('modalContainerWindow');
+    
     if (!modal || !body) return;
+
+    body.className = "modal-flex"; 
+    body.style.display = "flex";
+
+    if (container) {
+        container.style.maxWidth = "var(--modal-max-width, 900px)";
+        container.style.background = "#0f0f0f";
+    }
 
     const type = (item.type || '').toLowerCase();
     const imgUrl = item.images?.jpg?.large_image_url || item.img || '';
@@ -448,7 +690,6 @@ function setupSearch() {
         clearTimeout(searchTimeout);
         searchQuery = e.target.value.trim();
 
-        // Fixed: If searching inside "My Collection", filter locally without making API requests
         if (currentMode === 'mylist') {
             const localFilter = cachedCloudList.filter(item => {
                 const title = (item.title_english || item.title || '').toLowerCase();
@@ -471,7 +712,6 @@ function setupSearch() {
     });
 }
 
-// Fixed scroll window evaluation threshold to protect API rate caps
 window.onscroll = () => {
     if (currentMode === 'mylist' || !hasNextPage || isLoading) return;
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
